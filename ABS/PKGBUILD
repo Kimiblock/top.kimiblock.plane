@@ -1,6 +1,6 @@
  
 pkgname='top.kimiblock.plane'
-pkgver=r180.4772078
+pkgver=r183.0e01a01
 pkgrel=1
 pkgdesc='Matrix client focusing primarily on a simple, elegant and secure interface.'
 arch=('x86_64')
