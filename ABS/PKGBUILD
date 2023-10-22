@@ -1,0 +1,55 @@
+ 
+pkgname='top.kimiblock.plane'
+pkgver=r180.4772078
+pkgrel=1
+pkgdesc='Matrix client focusing primarily on a simple, elegant and secure interface.'
+arch=('x86_64')
+
+pkgver() {
+	cd "$_pkgname"
+	printf "r%s.%s" "$(git rev-list --count HEAD)" "$(git rev-parse --short HEAD)"
+}
+
+url='https://plane.kimiblock.top/'
+license=('MIT')
+
+# https://tauri.studio/v1/guides/getting-started/prerequisites#1-system-dependencies
+depends=(
+	'webkit2gtk'
+	'openssl'
+	'gtk3'
+	'appmenu-gtk-module'
+	'libappindicator-gtk3'
+	'librsvg'
+	'libvips'
+	'sqlite'
+	'gst-plugins-good'
+)
+makedepends=('rust' 'nodejs' 'npm')
+
+# This makes sure dirty builds still pull down the newest version
+source=("git+https://github.com/Kimiblock/top.kimiblock.plane.git")
+sha256sums=("SKIP")
+
+#install="${pkgname}.install"
+
+build() {
+	cd "${pkgname}"
+	git submodule init
+	git submodule update
+
+	msg2 'Installing Node dependencies...'
+	cd 'cinny' && npm --legacy-peer-deps ci
+	cd .. && npm ci
+
+	msg2 'Running Tauri build...'
+	# With the default memory limit, the build fails due to having insufficient
+	# memory available. 4GB seems to be enough for now.
+	NODE_OPTIONS=--max_old_space_size=8192 npm run tauri build -- --bundles 'deb'
+}
+
+package() {
+	mv "${pkgname}/src-tauri/target/release/bundle/deb/"moe-chat*.deb "${pkgname}/src-tauri/target/release/bundle/deb/moe-chat.deb"
+	ar x "${pkgname}/src-tauri/target/release/bundle/deb/moe-chat.deb" 'data.tar.gz'
+	tar xzf 'data.tar.gz' -C "${pkgdir}"
+}
